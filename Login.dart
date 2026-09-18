@@ -1,22 +1,5 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(LoginApp());
-}
-
-class LoginApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'SellKaro Login',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-      ),
-      home: LoginScreen(),
-    );
-  }
-}
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -24,110 +7,162 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _phoneController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isLogin = true; // To switch between Login and Register mode
+  bool _isLoading = false;
+
+  Future<void> _submitAuthForm() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      try {
+        if (_isLogin) {
+          // Login existing user
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('सफलतापूर्वक लॉगिन हो गए हैं!')),
+          );
+        } else {
+          // Register new user
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text.trim(),
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('नया अकाउंट सफलतापूर्वक बन गया है!')),
+          );
+        }
+
+        // Navigate to Home screen after successful auth
+        Navigator.pushReplacementNamed(context, '/home');
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        String message = 'ऑथेंटिकेशन में त्रुटि हुई';
+        if (e.code == 'user-not-found') {
+          message = 'इस ईमेल से कोई यूजर नहीं मिला।';
+        } else if (e.code == 'wrong-password') {
+          message = 'गलत पासवर्ड दर्ज किया गया है।';
+        } else if (e.code == 'email-already-in-use') {
+          message = 'यह ईमेल पहले से इस्तेमाल में है।';
+        } else if (e.code == 'weak-password') {
+          message = 'पासवर्ड बहुत कमजोर है।';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('त्रुटि: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(_isLogin ? 'SellKaro - Login' : 'SellKaro - Register'),
+        backgroundColor: Colors.orange.shade800,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Logo / App Name Icon
-            Center(
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.phone_android,
-                  size: 60,
-                  color: Colors.orange.shade800,
-                ),
-              ),
-            ),
-            SizedBox(height: 30),
-            
-            // Heading
-            Text(
-              'SellKaro mein Swagat hai!',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-            SizedBox(height: 8),
-            
-            // Subtitle with Tagline Vibe
-            Text(
-              'Smart selling ke sath apne rishte aur bhavishye banayein. Login karne ke liye apna mobile number darj karein.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
-            ),
-            SizedBox(height: 30),
-            
-            // Phone Number Input Field
-            TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Mobile Number',
-                hintText: 'Enter 10 digit mobile number',
-                prefixText: '+91 ',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.orange.shade800, width: 2),
-                ),
-              ),
-            ),
-            SizedBox(height: 20),
-            
-            // Continue / Send OTP Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange.shade800,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: SingleChildScrollView(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'SellKaro Super App',
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange.shade900,
+                    ),
                   ),
-                ),
-                onPressed: () {
-                  String phone = _phoneController.text.trim();
-                  if (phone.length == 10) {
-                    // Yahan OTP bhejne ka logic aayega
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('OTP bhej diya gaya hai: +91 $phone')),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Kripya sahi 10 ankon ka mobile number dalein')),
-                    );
-                  }
-                },
-                child: Text(
-                  'OTP Bhejein (Get OTP)',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                  SizedBox(height: 8),
+                  Text(
+                    'भारत का अपना क्लासिफाइड्स और सुपर-ऐप',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                   ),
-                ),
+                  SizedBox(height: 30),
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email Address',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.email),
+                    ),
+                    validator: (value) =>
+                        value!.isEmpty || !value.contains('@')
+                            ? 'कृपया वैध ईमेल दर्ज करें'
+                            : null,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.lock),
+                    ),
+                    validator: (value) =>
+                        value!.isEmpty || value.length < 6
+                            ? 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए'
+                            : null,
+                  ),
+                  SizedBox(height: 24),
+                  _isLoading
+                      ? CircularProgressIndicator()
+                      : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _submitAuthForm,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange.shade800,
+                              padding: EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: Text(
+                              _isLogin ? 'Login' : 'Register',
+                              style: TextStyle(fontSize: 16, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                  SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _isLogin = !_isLogin;
+                      });
+                    },
+                    child: Text(
+                      _isLogin
+                          ? 'अकाउंट नहीं है? नया रजिस्टर करें'
+                          : 'पहिले से अकाउंट है? लॉगिन करें',
+                      style: TextStyle(color: Colors.orange.shade900),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
