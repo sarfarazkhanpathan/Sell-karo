@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'matrimony.dart';
+import 'jobs.dart';
+import 'gossip_chat.dart';
+import 'location_helper.dart';
+import 'sell_vehicle.dart';
+import 'sell_property.dart';
+import 'sell_business.dart';
+import 'digital_shop.dart';
 
 void main() {
   runApp(SellKaroApp());
@@ -34,31 +42,23 @@ class HomeScreen extends StatelessWidget {
     {'title': 'Business Buy/Sell', 'icon': Icons.storefront, 'color': Colors.redAccent, 'route': 'business'},
     {'title': 'Matrimony (Rishte)', 'icon': Icons.favorite, 'color': Colors.pinkAccent, 'route': 'matrimony'},
     {'title': 'Gupshup & Gossip', 'icon': Icons.chat_bubble_outline, 'color': Colors.purple, 'route': 'gossip'},
+    {'title': 'Digital Shop (Store)', 'icon': Icons.shopping_bag, 'color': Colors.deepOrange.shade800, 'route': 'digital_shop'},
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('SellKaro — Smart Selling & Rishte'),
+        title: Text('SellKaro - Smart Selling & Rishte'),
         backgroundColor: Colors.orange.shade800,
         actions: [
           IconButton(
             icon: Icon(Icons.location_on),
             onPressed: () {
-              // Yahan location helper khulega
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Location Chunein'),
-                  content: Text('Gujarat ke sabhi shehar auto-populated hain!'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('Theek hai'),
-                    ),
-                  ],
-                ),
+              // Location Helper / All-India Search khulega
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AllIndiaLocationScreen()),
               );
             },
           ),
@@ -83,30 +83,15 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 16),
-            
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Sabhi Categories',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    // Gossip Room direct access
-                  },
-                  icon: Icon(Icons.chat, color: Colors.purple),
-                  label: Text('Gossip Room', style: TextStyle(color: Colors.purple)),
-                ),
-              ],
+            Text(
+              'Sabhi Categories',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
-            SizedBox(height: 8),
-            
-            // Categories Grid with Navigation
+            SizedBox(height: 10),
             Expanded(
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -126,40 +111,38 @@ class HomeScreen extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () {
-                        // Yahan click hone par alag-alag screens par bhejenge
+                        // Yahan routing handle ki ja rahi hai
                         String route = cat['route'];
-                        String msg = '${cat['title']} section jald khulega!';
-                        
-                        if (route == 'gossip') {
-                          msg = 'Gossip & Chat Room open ho raha hai!';
-                        } else if (route == 'matrimony') {
-                          msg = 'Matrimony Rishte section open ho raha hai!';
-                        } else if (route == 'vehicle') {
-                          msg = 'Vehicle Ad form open ho raha hai!';
+                        if (route == 'vehicle') {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => SellVehicleScreen()));
                         } else if (route == 'property') {
-                          msg = 'Property Ad form open ho raha hai!';
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => SellPropertyScreen()));
                         } else if (route == 'jobs') {
-                          msg = 'Jobs listing open ho rahi hai!';
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => JobsScreen()));
+                        } else if (route == 'matrimony') {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => MatrimonyScreen()));
+                        } else if (route == 'gossip') {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => GossipChatScreen()));
+                        } else if (route == 'business') {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => SellBusinessScreen()));
+                        } else if (route == 'digital_shop') {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => DigitalShopScreen()));
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('${cat['title']} ka page jald a raha hai!')),
+                          );
                         }
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(msg), duration: Duration(seconds: 1)),
-                        );
                       },
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            cat['icon'],
-                            size: 34,
-                            color: cat['color'],
-                          ),
-                          SizedBox(height: 6),
+                          Icon(cat['icon'], size: 40, color: cat['color']),
+                          SizedBox(height: 8),
                           Text(
                             cat['title'],
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
