@@ -9,6 +9,7 @@ import 'sell_property.dart';
 import 'matrimony.dart';
 import 'sell_business.dart';
 import 'sell_furniture_appliances.dart';
+import 'view_ads.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,6 +36,7 @@ class SellKaroApp extends StatelessWidget {
         '/matrimony': (context) => MatrimonyScreen(),
         '/sell_business': (context) => SellBusinessScreen(),
         '/sell_furniture': (context) => SellFurnitureAppliancesScreen(),
+        '/view_ads': (context) => ViewAdsScreen(),
       },
     );
   }
