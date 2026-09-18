@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'image_helper.dart';
-import 'video_reels_helper.dart';
-import 'dart:io';
+import 'video_helper.dart';
+import 'location_helper.dart';
 
 class SellFurnitureAppliancesScreen extends StatefulWidget {
   @override
@@ -10,40 +11,43 @@ class SellFurnitureAppliancesScreen extends StatefulWidget {
 
 class _SellFurnitureAppliancesScreenState extends State<SellFurnitureAppliancesScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _itemController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
 
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
+  bool _isLoading = false;
 
-  String selectedCategory = 'Furniture (Sofa, Bed, Table...)';
-  final List<String> categories = [
-    'Furniture (Sofa, Bed, Table...)',
-    'Home Appliances (AC, Fridge, TV...)',
-    'Kitchen Appliances (Microwave, Mixer...)',
-    'Garden & Outdoor Items'
-  ];
-
-  // All-India States List
-  String selectedState = 'Uttar Pradesh';
-  final List<String> indianStates = [
-    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
-    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-    'Delhi (UT)', 'Jammu & Kashmir (UT)', 'Ladakh (UT)', 'Other States/UTs'
-  ];
-
-  List<File> _itemImages = [];
-  File? _itemVideo;
+  Future<void> _submitData() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      try {
+        await FirebaseFirestore.instance.collection('furniture_appliances').add({
+          'title': _titleController.text.trim(),
+          'itemType': _itemController.text.trim(),
+          'price': _priceController.text.trim(),
+          'description': _descController.text.trim(),
+          'createdAt': Timestamp.now(),
+        });
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('फर्नीचर/अप्लायंसेज का विज्ञापन Firebase पर सफलतापूर्वक सेव हो गया है!')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('त्रुटि: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Furniture & Appliances (All-India)'),
+        title: Text('Furniture & Appliances'),
         backgroundColor: Colors.teal.shade700,
       ),
       body: Padding(
@@ -53,184 +57,65 @@ class _SellFurnitureAppliancesScreenState extends State<SellFurnitureAppliancesS
           child: ListView(
             children: [
               Text(
-                'Ghar ka Samaan, Furniture ya Appliances Bechein',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal.shade800),
+                'घरेलू सामान और फर्नीचर विवरण (All-India)',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 16),
-
-              // Category Dropdown
-              DropdownButtonFormField<String>(
-                value: selectedCategory,
-                items: categories.map((cat) {
-                  return DropdownMenuItem(value: cat, child: Text(cat));
-                }).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    selectedCategory = val!;
-                  });
-                },
+              TextFormField(
+                controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: 'Samaan ki Category',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Item Title (e.g. Sofa Set / Fridge)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) => v!.isEmpty ? 'कृपया टाइटल दर्ज करें' : null,
+              ),
+              SizedBox(height: 12),
+              TextFormField(
+                controller: _itemController,
+                decoration: InputDecoration(
+                  labelText: 'Condition (New / Used)',
+                  border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 16),
-
-              // Title / Item Name
+              SizedBox(height: 12),
               TextFormField(
-                controller: titleController,
-                decoration: InputDecoration(
-                  labelText: 'Samaan ka Naam (Jaise: Wooden Sofa, LG Double Door Fridge...)',
-                  prefixIcon: Icon(Icons.weekend),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-                validator: (val) => val!.isEmpty ? 'Kripya naam likhein' : null,
-              ),
-              SizedBox(height: 16),
-
-              // Price
-              TextFormField(
-                controller: priceController,
+                controller: _priceController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Maangti Kimat (Price in ₹)',
-                  prefixIcon: Icon(Icons.currency_rupee),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Price (INR)',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya kimat likhein' : null,
+                validator: (v) => v!.isEmpty ? 'कृपया कीमत दर्ज करें' : null,
               ),
-              SizedBox(height: 16),
-
-              // All-India State Dropdown
-              DropdownButtonFormField<String>(
-                value: selectedState,
-                items: indianStates.map((state) {
-                  return DropdownMenuItem(value: state, child: Text(state));
-                }).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    selectedState = val!;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'State / Rajya (All-India Coverage)',
-                  prefixIcon: Icon(Icons.map),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // City / Village Name
+              SizedBox(height: 12),
               TextFormField(
-                controller: cityController,
-                decoration: InputDecoration(
-                  labelText: 'Shehar, Kasba ya Gaon ka Naam (City / Village)',
-                  prefixIcon: Icon(Icons.location_city),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-                validator: (val) => val!.isEmpty ? 'Kripya shehar ya gaon likhein' : null,
-              ),
-              SizedBox(height: 16),
-
-              // Description
-              TextFormField(
-                controller: descriptionController,
+                controller: _descController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Condition aur Purana Kitna hai (Jaise: 1 Year old, Good condition...)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
                 ),
-              ),
-              SizedBox(height: 16),
-
-              // Contact Number
-              TextFormField(
-                controller: contactController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Sampark Mobile Number (WhatsApp)',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-                validator: (val) => val!.length < 10 ? 'Sahi mobile number likhein' : null,
               ),
               SizedBox(height: 20),
-
-              // --- IMAGE UPLOAD WIDGET ---
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.teal.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.teal.shade200),
-                ),
-                child: ImageUploadWidget(
-                  onImagesSelected: (images) {
-                    setState(() {
-                      _itemImages = images;
-                    });
-                  },
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // --- VIDEO REELS WIDGET ---
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple.shade200),
-                ),
-                child: VideoReelsUploadWidget(
-                  onVideoSelected: (video) {
-                    setState(() {
-                      _itemVideo = video;
-                    });
-                  },
-                ),
-              ),
+              LocationHelperWidget(),
+              SizedBox(height: 12),
+              ImagePickerWidget(),
+              SizedBox(height: 12),
+              VideoPickerWidget(),
               SizedBox(height: 24),
-
-              // Submit Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal.shade700,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    if (_itemImages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Kripya samaan ki kam se kam ek photo jaroor upload karein!')),
-                      );
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Aapka Samaan Ad All-India level par live ho gaya hai!')),
-                    );
-                  }
-                },
-                child: Text(
-                  'Samaan Ad Live Karein',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ),
+              _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _submitData,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal.shade700,
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'Submit Ad to Firebase',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
             ],
           ),
         ),
