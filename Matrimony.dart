@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'image_helper.dart'; // Image picker helper import kiya gaya hai
-import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'image_helper.dart';
+import 'video_helper.dart';
+import 'location_helper.dart';
 
 class MatrimonyScreen extends StatefulWidget {
   @override
@@ -9,211 +11,122 @@ class MatrimonyScreen extends StatefulWidget {
 
 class _MatrimonyScreenState extends State<MatrimonyScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _ageController = TextEditingController();
+  final TextEditingController _religionController = TextEditingController();
+  final TextEditingController _occupationController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
-  final TextEditingController educationController = TextEditingController();
-  final TextEditingController professionController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
+  bool _isLoading = false;
 
-  String selectedProfileFor = 'Bride (Dulhan)';
-  String selectedReligion = 'Islam';
-  
-  List<File> _profileImages = [];
-
-  final List<String> profileTypes = ['Bride (Dulhan)', 'Groom (Dulha)'];
-  final List<String> religions = ['Islam', 'Hindu', 'Sikh', 'Christian', 'Jain', 'Other'];
+  Future<void> _submitData() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      try {
+        await FirebaseFirestore.instance.collection('matrimony').add({
+          'fullName': _nameController.text.trim(),
+          'age': _ageController.text.trim(),
+          'religion': _religionController.text.trim(),
+          'occupation': _occupationController.text.trim(),
+          'description': _descController.text.trim(),
+          'createdAt': Timestamp.now(),
+        });
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('मैट्रिमोनी प्रोफाइल Firebase पर सफलतापूर्वक सेव हो गई है!')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('त्रुटि: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Matrimony (Rishte) Registration'),
+        title: Text('Matrimony (Rishte)'),
         backgroundColor: Colors.pink.shade700,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key_form: _formKey,
           key: _formKey,
           child: ListView(
             children: [
               Text(
-                'Apne Ya Apne Parivar ke liye Rishta Jodein',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.pink.shade800),
+                'रिश्ते के लिए विवरण दर्ज करें (All-India)',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 16),
-
-              // Profile For (Bride / Groom)
-              DropdownButtonFormField<String>(
-                value: selectedProfileFor,
-                items: profileTypes.map((type) {
-                  return DropdownMenuItem(value: type, child: Text(type));
-                }).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    selectedProfileFor = val!;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'Profile kiske liye hai?',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // Full Name
               TextFormField(
-                controller: nameController,
+                controller: _nameController,
                 decoration: InputDecoration(
-                  labelText: 'Pura Naam (Full Name)',
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Full Name',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya naam likhein' : null,
+                validator: (v) => v!.isEmpty ? 'कृपया नाम दर्ज करें' : null,
               ),
-              SizedBox(height: 16),
-
-              // Age
+              SizedBox(height: 12),
               TextFormField(
-                controller: ageController,
+                controller: _ageController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Umar (Age in Years)',
-                  prefixIcon: Icon(Icons.cake),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Age',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya umar likhein' : null,
+                validator: (v) => v!.isEmpty ? 'कृपया आयु दर्ज करें' : null,
               ),
-              SizedBox(height: 16),
-
-              // Religion Dropdown
-              DropdownButtonFormField<String>(
-                value: selectedReligion,
-                items: religions.map((rel) {
-                  return DropdownMenuItem(value: rel, child: Text(rel));
-                }).toList(),
-                onChanged: (val) {
-                  setState(() {
-                    selectedReligion = val!;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'Dharm / Religion',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // Education
+              SizedBox(height: 12),
               TextFormField(
-                controller: educationController,
+                controller: _religionController,
                 decoration: InputDecoration(
-                  labelText: 'Padhai / Education (Degree)',
-                  prefixIcon: Icon(Icons.school),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Religion / Community',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya education likhein' : null,
+                validator: (v) => v!.isEmpty ? 'कृपया धर्म दर्ज करें' : null,
               ),
-              SizedBox(height: 16),
-
-              // Profession
+              SizedBox(height: 12),
               TextFormField(
-                controller: professionController,
+                controller: _occupationController,
                 decoration: InputDecoration(
-                  labelText: 'Naukri ya Business (Profession)',
-                  prefixIcon: Icon(Icons.work),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Occupation / Education',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya profession likhein' : null,
               ),
-              SizedBox(height: 16),
-
-              // City & Location
+              SizedBox(height: 12),
               TextFormField(
-                controller: cityController,
+                controller: _descController,
+                maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Shehar / Location (City, State)',
-                  prefixIcon: Icon(Icons.location_city),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Partner Expectations / Bio',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya shehar likhein' : null,
-              ),
-              SizedBox(height: 16),
-
-              // Contact Number
-              TextFormField(
-                controller: contactController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Sampark Mobile Number (WhatsApp)',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-                validator: (val) => val!.length < 10 ? 'Sahi mobile number likhein' : null,
               ),
               SizedBox(height: 20),
-
-              // --- IMAGE UPLOAD WIDGET INTEGRATION ---
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.pink.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.pink.shade200),
-                ),
-                child: ImageUploadWidget(
-                  onImagesSelected: (images) {
-                    setState(() {
-                      _profileImages = images;
-                    });
-                  },
-                ),
-              ),
+              LocationHelperWidget(),
+              SizedBox(height: 12),
+              ImagePickerWidget(),
+              SizedBox(height: 12),
+              VideoPickerWidget(),
               SizedBox(height: 24),
-
-              // Submit Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.pink.shade700,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    if (_profileImages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Kripya kam se kam ek photo zaroor upload karein!')),
-                      );
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Matrimony profile safaltapoorvak live ho gayi hai!')),
-                    );
-                  }
-                },
-                child: Text(
-                  'Rishta Profile Live Karein',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ),
+              _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _submitData,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.pink.shade700,
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'Submit Matrimony Profile to Firebase',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
             ],
           ),
         ),
