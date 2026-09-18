@@ -20,12 +20,19 @@ class SellKaroApp extends StatelessWidget {
 
 class HomeScreen extends StatelessWidget {
   final List<Map<String, dynamic>> categories = [
-    {'title': 'Vehicles', 'icon': Icons.directions_car, 'color': Colors.blue},
-    {'title': 'Property', 'icon': Icons.home, 'color': Colors.green},
+    {'title': 'Cars & Bikes', 'icon': Icons.directions_car, 'color': Colors.blue},
+    {'title': 'Properties', 'icon': Icons.home, 'color': Colors.green},
     {'title': 'Jobs', 'icon': Icons.work, 'color': Colors.orange},
-    {'title': 'Matrimony', 'icon': Icons.favorite, 'color': Colors.pink},
-    {'title': 'Electronics', 'icon': Icons.devices, 'color': Colors.purple},
-    {'title': 'Clothing', 'icon': Icons.checkroom, 'color': Colors.teal},
+    {'title': 'Mobiles', 'icon': Icons.phone_android, 'color': Colors.deepPurple},
+    {'title': 'Fashion', 'icon': Icons.checkroom, 'color': Colors.pink},
+    {'title': 'Books & Sports', 'icon': Icons.sports_basketball, 'color': Colors.amber},
+    {'title': 'Electronics', 'icon': Icons.devices, 'color': Colors.indigo},
+    {'title': 'Commercial Vehicles', 'icon': Icons.local_shipping, 'color': Colors.cyan},
+    {'title': 'Furniture', 'icon': Icons.weekend, 'color': Colors.brown},
+    {'title': 'Pets', 'icon': Icons.pets, 'color': Colors.deepOrange},
+    {'title': 'Services', 'icon': Icons.miscellaneous_services, 'color': Colors.teal},
+    {'title': 'Business Buy/Sell', 'icon': Icons.storefront, 'color': Colors.redAccent},
+    {'title': 'Matrimony (Rishte)', 'icon': Icons.favorite, 'color': Colors.pinkAccent},
   ];
 
   @override
@@ -42,11 +49,10 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Search Bar
             TextField(
               decoration: InputDecoration(
                 hintText: 'Kya dhoond rahe hain? (Car, Job, Rishta...)',
@@ -59,10 +65,9 @@ class HomeScreen extends StatelessWidget {
                 fillColor: Colors.grey.shade200,
               ),
             ),
-            SizedBox(height: 20),
-            
+            SizedBox(height: 16),
             Text(
-              'Explore Categories',
+              'Sabhi Categories',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -70,14 +75,12 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 12),
-            
-            // Categories Grid
             Expanded(
               child: GridView.builder(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                   childAspectRatio: 1.3,
                 ),
                 itemCount: categories.length,
@@ -95,14 +98,15 @@ class HomeScreen extends StatelessWidget {
                         children: [
                           Icon(
                             categories[index]['icon'],
-                            size: 40,
+                            size: 34,
                             color: categories[index]['color'],
                           ),
-                          SizedBox(height: 8),
+                          SizedBox(height: 6),
                           Text(
                             categories[index]['title'],
+                            textAlign: TextAlign.center,
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 13,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
                             ),
