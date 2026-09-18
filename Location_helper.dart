@@ -9,7 +9,7 @@ class LocationApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'SellKaro Location',
+      title: 'SellKaro All-India Location',
       theme: ThemeData(
         primarySwatch: Colors.orange,
       ),
@@ -27,45 +27,60 @@ class _LocationScreenState extends State<LocationScreen> {
   String? selectedState = 'Gujarat';
   String? selectedCity;
 
-  // Gujarat ke pramukh shehar jo state select hote hi auto-populate honge
-  final Map<String, List<String>> stateToCities = {
+  // Pure Bharat (All India) ke States aur unke pramukh Cities ki auto-list
+  final Map<String, List<String>> allIndiaStatesAndCities = {
     'Gujarat': [
-      'Ahmedabad',
-      'Surat',
-      'Vadodara',
-      'Rajkot',
-      'Bhavnagar',
-      'Jamnagar',
-      'Junagadh',
-      'Gandhinagar',
-      'Anand',
-      'Mehsana',
-      'Navsari',
-      'Vapi'
+      'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 
+      'Jamnagar', 'Junagadh', 'Gandhinagar', 'Anand', 'Mehsana', 'Vapi', 'Navsari'
     ],
     'Maharashtra': [
-      'Mumbai',
-      'Pune',
-      'Nagpur',
-      'Nashik',
-      'Aurangabad'
+      'Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Aurangabad', 
+      'Solapur', 'Thane', 'Kolhapur', 'Amravati', 'Nanded'
+    ],
+    'Delhi': [
+      'New Delhi', 'North Delhi', 'South Delhi', 'East Delhi', 'West Delhi', 'Dwarka', 'Rohini'
+    ],
+    'Uttar Pradesh': [
+      'Lucknow', 'Kanpur', 'Ghaziabad', 'Agra', 'Varanasi', 
+      'Meerut', 'Prayagraj', 'Bareilly', 'Aligarh', 'Moradabad', 'Noida'
     ],
     'Rajasthan': [
-      'Jaipur',
-      'Jodhpur',
-      'Udaipur',
-      'Kota',
-      'Ajmer'
+      'Jaipur', 'Jodhpur', 'Udaipur', 'Kota', 'Ajmer', 
+      'Bikaner', 'Alwar', 'Bhilwara', 'Sikar', 'Pali'
+    ],
+    'Karnataka': [
+      'Bengaluru', 'Mysuru', 'Hubballi-Dharwad', 'Mangaluru', 'Belagavi', 'Kalaburagi'
+    ],
+    'Tamil Nadu': [
+      'Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli'
+    ],
+    'West Bengal': [
+      'Kolkata', 'Howrah', 'Durgapur', 'Asansol', 'Siliguri', 'Kharagpur'
+    ],
+    'Madhya Pradesh': [
+      'Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain', 'Sagar', 'Dewas'
+    ],
+    'Punjab': [
+      'Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala', 'Bathinda', 'Mohali'
+    ],
+    'Bihar': [
+      'Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Purnia', 'Darbhanga'
+    ],
+    'Haryana': [
+      'Gurugram', 'Faridabad', 'Panipat', 'Ambala', 'Yamunanagar', 'Rohtak', 'Hisar'
+    ],
+    'Telangana': [
+      'Hyderabad', 'Warangal', 'Nizamabad', 'Khammam', 'Karimnagar'
     ]
   };
 
   @override
   Widget build(BuildContext context) {
-    List<String> availableCities = stateToCities[selectedState] ?? [];
+    List<String> availableCities = allIndiaStatesAndCities[selectedState] ?? [];
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Apni Location Chunein'),
+        title: Text('Pura Bharat - Location Chunein'),
         backgroundColor: Colors.orange.shade800,
       ),
       body: Padding(
@@ -74,13 +89,14 @@ class _LocationScreenState extends State<LocationScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'State (Rajya) Chunein',
+              'State (Rajya) Chunein (All India)',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade700),
             ),
             SizedBox(height: 8),
             DropdownButtonFormField<String>(
               value: selectedState,
-              items: stateToCities.keys.map((String state) {
+              isExpanded: true,
+              items: allIndiaStatesAndCities.keys.map((String state) {
                 return DropdownMenuItem(
                   value: state,
                   child: Text(state, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -89,7 +105,7 @@ class _LocationScreenState extends State<LocationScreen> {
               onChanged: (newValue) {
                 setState(() {
                   selectedState = newValue;
-                  selectedCity = null; // State badalte hi city reset ho jayegi
+                  selectedCity = null; // State badalte hi city reset ho jayegi aur naye state ki cities aa jayengi
                 });
               },
               decoration: InputDecoration(
@@ -122,7 +138,7 @@ class _LocationScreenState extends State<LocationScreen> {
                           selectedCity = city;
                         });
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Location Set: $city, $selectedState')),
+                          SnackBar(content: Text('Location Set: $city, $selectedState (All India)')),
                         );
                       },
                     ),
