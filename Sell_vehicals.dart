@@ -1,22 +1,7 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(SellVehicleApp());
-}
-
-class SellVehicleApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'SellKaro - Cars & Bikes',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: SellVehicleScreen(),
-    );
-  }
-}
+import 'image_helper.dart';
+import 'video_reels_helper.dart';
+import 'dart:io';
 
 class SellVehicleScreen extends StatefulWidget {
   @override
@@ -24,164 +9,240 @@ class SellVehicleScreen extends StatefulWidget {
 }
 
 class _SellVehicleScreenState extends State<SellVehicleScreen> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _brandController = TextEditingController();
-  final TextEditingController _yearController = TextEditingController();
-  final TextEditingController _kmController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
-  final TextEditingController _descController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
-  String _selectedVehicleType = 'Car';
-  String _selectedState = 'Gujarat';
-  String _selectedCity = 'Ahmedabad';
+  final TextEditingController brandController = TextEditingController();
+  final TextEditingController modelController = TextEditingController();
+  final TextEditingController yearController = TextEditingController();
+  final TextEditingController kmDrivenController = TextEditingController();
+  final TextEditingController priceController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController descriptionController = TextEditingController();
+  final TextEditingController contactController = TextEditingController();
 
-  final List<String> citiesOfGujarat = [
-    'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar', 'Gandhinagar', 'Anand'
-  ];
+  String selectedVehicleType = 'Car';
+  final List<String> vehicleTypes = ['Car', 'Bike / Scooter', 'Commercial Vehicle', 'tractor'];
+
+  List<File> _vehicleImages = [];
+  File? _vehicleVideo;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Gaadi ya Bike Bechein (Post Ad)'),
-        backgroundColor: Colors.blue.shade800,
+        title: Text('Cars & Bikes Sell Karein'),
+        backgroundColor: Colors.blue.shade700,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            Text(
-              'Apne Vahan ki Jankari Deen',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
-            ),
-            SizedBox(height: 16),
-
-            // Vehicle Type (Car / Bike)
-            DropdownButtonFormField<String>(
-              value: _selectedVehicleType,
-              items: ['Car', 'Bike', 'Scooter', 'Commercial Vehicle'].map((String type) {
-                return DropdownMenuItem(value: type, child: Text(type));
-              }).toList(),
-              onChanged: (val) {
-                setState(() {
-                  _selectedVehicleType = val!;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: 'Vahan ka Prakar (Type)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              Text(
+                'Apni Gaadi ki Details Bharein',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue.shade800),
               ),
-            ),
-            SizedBox(height: 12),
+              SizedBox(height: 16),
 
-            // Ad Title
-            TextField(
-              controller: _titleController,
-              decoration: InputDecoration(
-                labelText: 'Ad Title ( jaise: Maruti Swift 2020 Model )',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            SizedBox(height: 12),
-
-            // Brand / Model
-            TextField(
-              controller: _brandController,
-              decoration: InputDecoration(
-                labelText: 'Company / Brand (jaise: Hyundai, Honda)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            SizedBox(height: 12),
-
-            // Year & KM Row
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _yearController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Model Year',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
+              // Vehicle Type Dropdown
+              DropdownButtonFormField<String>(
+                value: selectedVehicleType,
+                items: vehicleTypes.map((type) {
+                  return DropdownMenuItem(value: type, child: Text(type));
+                }).toList(),
+                onChanged: (val) {
+                  setState(() {
+                    selectedVehicleType = val!;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Gaadi ka Prakar (Vehicle Type)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _kmController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Kilometers Driven',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
+              ),
+              SizedBox(height: 16),
+
+              // Brand / Company Name
+              TextFormField(
+                controller: brandController,
+                decoration: InputDecoration(
+                  labelText: 'Company / Brand (Jaise: Maruti, Honda, Bajaj...)',
+                  prefixIcon: Icon(Icons.directions_car),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
                 ),
-              ],
-            ),
-            SizedBox(height: 12),
-
-            // Price
-            TextField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Keemat / Price (in ₹)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                validator: (val) => val!.isEmpty ? 'Kripya brand ka naam likhein' : null,
               ),
-            ),
-            SizedBox(height: 12),
+              SizedBox(height: 16),
 
-            // Location: City Selector (Gujarat Auto-List)
-            DropdownButtonFormField<String>(
-              value: _selectedCity,
-              items: citiesOfGujarat.map((String city) {
-                return DropdownMenuItem(value: city, child: Text(city));
-              }).toList(),
-              onChanged: (val) {
-                setState(() {
-                  _selectedCity = val!;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: 'Shehar (Gujarat)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              // Model Name
+              TextFormField(
+                controller: modelController,
+                decoration: InputDecoration(
+                  labelText: 'Model (Jaise: Swift, Activa, Splendor...)',
+                  prefixIcon: Icon(Icons.model_training),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
+                validator: (val) => val!.isEmpty ? 'Kripya model likhein' : null,
               ),
-            ),
-            SizedBox(height: 12),
+              SizedBox(height: 16),
 
-            // Description
-            TextField(
-              controller: _descController,
-              maxLines: 3,
-              decoration: InputDecoration(
-                labelText: 'Vahan ke bare mein kuch aur batayein...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              // Manufacturing Year
+              TextFormField(
+                controller: yearController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Model ka Saal (Manufacturing Year)',
+                  prefixIcon: Icon(Icons.calendar_today),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
+                validator: (val) => val!.isEmpty ? 'Kripya saal likhein' : null,
               ),
-            ),
-            SizedBox(height: 24),
+              SizedBox(height: 16),
 
-            // Submit Button
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
+              // Kilometers Driven
+              TextFormField(
+                controller: kmDrivenController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Kitni Chali hai? (KM Driven)',
+                  prefixIcon: Icon(Icons.speed),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
+                validator: (val) => val!.isEmpty ? 'Kripya KM likhein' : null,
+              ),
+              SizedBox(height: 16),
+
+              // Price
+              TextFormField(
+                controller: priceController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Maangti Kimat (Price in ₹)',
+                  prefixIcon: Icon(Icons.currency_rupee),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
+                validator: (val) => val!.isEmpty ? 'Kripya kimat likhein' : null,
+              ),
+              SizedBox(height: 16),
+
+              // Location
+              TextFormField(
+                controller: locationController,
+                decoration: InputDecoration(
+                  labelText: 'Location (State, City, Area)',
+                  prefixIcon: Icon(Icons.location_on),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
+                validator: (val) => val!.isEmpty ? 'Kripya location likhein' : null,
+              ),
+              SizedBox(height: 16),
+
+              // Description
+              TextFormField(
+                controller: descriptionController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: 'Gaadi ke baare mein kuch aur (Insurance, Condition...)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // Contact Number
+              TextFormField(
+                controller: contactController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: 'Sampark Mobile Number (WhatsApp)',
+                  prefixIcon: Icon(Icons.phone),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
+                validator: (val) => val!.length < 10 ? 'Sahi mobile number likhein' : null,
+              ),
+              SizedBox(height: 20),
+
+              // --- IMAGE UPLOAD WIDGET ---
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: ImageUploadWidget(
+                  onImagesSelected: (images) {
+                    setState(() {
+                      _vehicleImages = images;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(height: 16),
+
+              // --- VIDEO REELS WIDGET ---
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.purple.shade200),
+                ),
+                child: VideoReelsUploadWidget(
+                  onVideoSelected: (video) {
+                    setState(() {
+                      _vehicleVideo = video;
+                    });
+                  },
+                ),
+              ),
+              SizedBox(height: 24),
+
+              // Submit Button
+              ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue.shade800,
+                  backgroundColor: Colors.blue.shade700,
+                  padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Aapki Vahan (Vehicle) ki Ad safalta-purvak live ho gayi hai!')),
-                  );
+                  if (_formKey.currentState!.validate()) {
+                    if (_vehicleImages.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Kripya gaadi ki kam se kam ek photo jaroor upload karein!')),
+                      );
+                      return;
+                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Aapka Vehicle Ad safaltapoorvak live ho gaya hai!')),
+                    );
+                  }
                 },
                 child: Text(
-                  'Ad Post Karein',
-                  style: TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+                  'Vehicle Ad Live Karein',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
