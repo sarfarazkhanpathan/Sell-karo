@@ -38,7 +38,29 @@ class HomeScreen extends StatelessWidget {
                 color: Colors.indigo.shade900,
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
+            
+            // विज्ञापन देखने के लिए डायरेक्ट बटन
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/view_ads');
+                },
+                icon: Icon(Icons.list_alt),
+                label: Text('View All Posted Ads (सभी विज्ञापन देखें)'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo.shade700,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+            
+            SizedBox(height: 16),
             Text(
               'अपनी कैटेगरी चुनें और विज्ञापन पोस्ट करें:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -106,8 +128,6 @@ class HomeScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: () {
-          // यदि आपने routes में नाम दिए हैं तो सीधे नेविगेट करें, 
-          // अन्यथा आप Navigator.push का भी इस्तेमाल कर सकते हैं
           try {
             Navigator.pushNamed(context, routeName);
           } catch (e) {
