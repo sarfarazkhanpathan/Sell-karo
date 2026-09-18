@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'login.dart';
 import 'matrimony.dart';
 import 'sell_business.dart';
@@ -6,7 +7,15 @@ import 'sell_vehicle.dart';
 import 'sell_property.dart';
 import 'sell_furniture_appliances.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    print('Firebase initialization error: $e');
+  }
+
   runApp(SellKaroApp());
 }
 
@@ -66,7 +75,6 @@ class HomeScreen extends StatelessWidget {
             ),
             SizedBox(height: 16),
             
-            // Grid of Categories linking to respective screens
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
