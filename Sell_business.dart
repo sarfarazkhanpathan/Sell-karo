@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'image_helper.dart';
-import 'video_reels_helper.dart';
-import 'dart:io';
+import 'video_helper.dart';
+import 'location_helper.dart';
 
 class SellBusinessScreen extends StatefulWidget {
   @override
@@ -10,23 +11,44 @@ class SellBusinessScreen extends StatefulWidget {
 
 class _SellBusinessScreenState extends State<SellBusinessScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _categoryController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _descController = TextEditingController();
 
-  final TextEditingController businessNameController = TextEditingController();
-  final TextEditingController businessTypeController = TextEditingController();
-  final TextEditingController priceController = TextEditingController();
-  final TextEditingController locationController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
+  bool _isLoading = false;
 
-  List<File> _businessImages = [];
-  File? _businessVideo;
+  Future<void> _submitData() async {
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
+      try {
+        await FirebaseFirestore.instance.collection('business').add({
+          'title': _titleController.text.trim(),
+          'category': _categoryController.text.trim(),
+          'price': _priceController.text.trim(),
+          'description': _descController.text.trim(),
+          'createdAt': Timestamp.now(),
+        });
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('बिजनेस/मशीनरी का विज्ञापन Firebase पर सफलतापूर्वक सेव हो गया है!')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('त्रुटि: $e')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Business & Machinery Buy/Sell'),
-        backgroundColor: Colors.red.shade700,
+        title: Text('Sell Business & Machinery'),
+        backgroundColor: Colors.red.shade800,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,157 +57,65 @@ class _SellBusinessScreenState extends State<SellBusinessScreen> {
           child: ListView(
             children: [
               Text(
-                'Apna Business, Factory ya Machinery Sale par Lagayein',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red.shade800),
+                'कमर्शियल और मशीनरी विवरण (All-India)',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 16),
-
-              // Business Name
               TextFormField(
-                controller: businessNameController,
+                controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: 'Business / Machinery ka Naam',
-                  prefixIcon: Icon(Icons.storefront),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Business / Machine Title',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya naam likhein' : null,
+                validator: (v) => v!.isEmpty ? 'कृपया टाइटल दर्ज करें' : null,
               ),
-              SizedBox(height: 16),
-
-              // Business Type / Category
+              SizedBox(height: 12),
               TextFormField(
-                controller: businessTypeController,
+                controller: _categoryController,
                 decoration: InputDecoration(
-                  labelText: 'Kiske liye hai? (Jaise: Restaurant, Factory Machine, Shop...)',
-                  prefixIcon: Icon(Icons.category),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Type (Shop, Factory, Heavy Machine)',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya category likhein' : null,
               ),
-              SizedBox(height: 16),
-
-              // Asking Price
+              SizedBox(height: 12),
               TextFormField(
-                controller: priceController,
+                controller: _priceController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: 'Maangti Kimat (Price in ₹)',
-                  prefixIcon: Icon(Icons.currency_rupee),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Asking Price (INR)',
+                  border: OutlineInputBorder(),
                 ),
-                validator: (val) => val!.isEmpty ? 'Kripya kimat likhein' : null,
+                validator: (v) => v!.isEmpty ? 'कृपया कीमत दर्ज करें' : null,
               ),
-              SizedBox(height: 16),
-
-              // Location
+              SizedBox(height: 12),
               TextFormField(
-                controller: locationController,
-                decoration: InputDecoration(
-                  labelText: 'Location (State, City, Market Area)',
-                  prefixIcon: Icon(Icons.location_on),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-                validator: (val) => val!.isEmpty ? 'Kripya location likhein' : null,
-              ),
-              SizedBox(height: 16),
-
-              // Description
-              TextFormField(
-                controller: descriptionController,
+                controller: _descController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Details / Visheshtaayein (Profit, Age, Condition...)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
                 ),
-              ),
-              SizedBox(height: 16),
-
-              // Contact Number
-              TextFormField(
-                controller: contactController,
-                keyboardType: TextInputType.phone,
-                decoration: InputDecoration(
-                  labelText: 'Sampark Mobile Number (WhatsApp)',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  filled: true,
-                  fillColor: Colors.grey.shade100,
-                ),
-                validator: (val) => val!.length < 10 ? 'Sahi mobile number likhein' : null,
               ),
               SizedBox(height: 20),
-
-              // --- IMAGE UPLOAD WIDGET ---
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: ImageUploadWidget(
-                  onImagesSelected: (images) {
-                    setState(() {
-                      _businessImages = images;
-                    });
-                  },
-                ),
-              ),
-              SizedBox(height: 16),
-
-              // --- VIDEO REELS WIDGET ---
-              Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.purple.shade200),
-                ),
-                child: VideoReelsUploadWidget(
-                  onVideoSelected: (video) {
-                    setState(() {
-                      _businessVideo = video;
-                    });
-                  },
-                ),
-              ),
+              LocationHelperWidget(),
+              SizedBox(height: 12),
+              ImagePickerWidget(),
+              SizedBox(height: 12),
+              VideoPickerWidget(),
               SizedBox(height: 24),
-
-              // Submit Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade700,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    if (_businessImages.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Kripya business ya machinery ki kam se kam ek photo jaroor dein!')),
-                      );
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Aapka Business Ad safaltapoorvak live ho gaya hai!')),
-                    );
-                  }
-                },
-                child: Text(
-                  'Business Ad Live Karein',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-              ),
+              _isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : ElevatedButton(
+                      onPressed: _submitData,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade800,
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                      ),
+                      child: Text(
+                        'Submit Business Ad to Firebase',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
             ],
           ),
         ),
