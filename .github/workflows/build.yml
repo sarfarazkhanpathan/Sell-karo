@@ -9,8 +9,10 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - name: Clone repository manually
+      run: |
+        git clone https://github.com/${{ github.repository }}.git .
+        git checkout main
 
     - name: Set up Java
       run: |
@@ -25,27 +27,28 @@ jobs:
 
     - name: Inject custom code and Build APK
       run: |
-        # नया डिफ़ॉल्ट प्रोजेक्ट बनाते हैं
         flutter create temp_project --org com.example.sellkaro
         
-        # आपकी सारी डार्ट फाइलों को नए प्रोजेक्ट के lib फोल्डर में कॉपी करते हैं
         cp *.dart temp_project/lib/ 2>/dev/null || true
         cp pubspec.yaml temp_project/ 2>/dev/null || true
         
-        # अगर आपकी मेन फाइल का नाम Main.dart है, तो उसे Flutter की डिफ़ॉल्ट main.dart बना देते हैं
         if [ -f "temp_project/lib/Main.dart" ]; then
           cp temp_project/lib/Main.dart temp_project/lib/main.dart
         elif [ -f "temp_project/lib/Home.dart" ]; then
           cp temp_project/lib/Home.dart temp_project/lib/main.dart
         fi
 
-        # फोल्डर में जाकर APK बिल्ड करते हैं
         cd temp_project
         flutter pub get
         flutter build apk --release
+
+    - name: Copy APK for Artifacts
+      run: |
+        mkdir -p final_output
+        cp temp_project/build/app/outputs/flutter-apk/app-release.apk final_output/app-release.apk
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: release-apk
-        path: temp_project/build/app/outputs/flutter-apk/app-release.apk
+        path: final_output/app-release.apk
