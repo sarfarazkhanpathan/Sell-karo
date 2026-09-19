@@ -29,22 +29,27 @@ jobs:
       run: |
         flutter create temp_project --org com.example.sellkaro
         
-        # Clear default lib files and copy all custom files safely
+        # प्रोजेक्ट के डिफ़ॉल्ट फोल्डर को खाली करके आपकी फाइलें कॉपी करते हैं
         rm -rf temp_project/lib/*
         cp *.dart temp_project/lib/ 2>/dev/null || true
         
+        # Linux केस-सेंसिटिविटी एरर रोकने के लिए सभी फाइलों के नाम लोअरकेस करते हैं
+        cd temp_project/lib
+        for f in *.dart; do
+          if [ -f "$f" ]; then
+            low=$(echo "$f" | tr '[:upper:]' '[:lower:]')
+            if [ "$f" != "$low" ]; then
+              mv "$f" "$low"
+            fi
+          fi
+        done
+        cd ../..
+        
         cd temp_project
         
-        # Add all required Firebase and utility dependencies used in your app
+        # सभी आवश्यक पैकेज एक साथ जोड़ते हैं
         flutter pub add firebase_core firebase_auth cloud_firestore image_picker
         
-        # Ensure main entry point exists, fallback if Main.dart is present
-        if [ -f "lib/Main.dart" ] && [ ! -f "lib/main.dart" ]; then
-          mv lib/Main.dart lib/main.dart
-        elif [ -f "lib/Home.dart" ] && [ ! -f "lib/main.dart" ]; then
-          mv lib/Home.dart lib/main.dart
-        fi
-
         flutter pub get
         flutter build apk --release
 
