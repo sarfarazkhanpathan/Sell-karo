@@ -9,10 +9,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Clone repository manually
-      run: |
-        git clone https://github.com/${{ github.repository }}.git .
-        git checkout main
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Set up Java
       run: |
@@ -25,10 +23,10 @@ jobs:
         git clone https://github.com/flutter/flutter.git -b 3.19.0 --depth 1 _flutter
         echo "$GITHUB_WORKSPACE/_flutter/bin" >> $GITHUB_PATH
 
-    - name: Doctor and config
+    - name: Check project directory
       run: |
-        flutter doctor
-        flutter config --no-analytics
+        pwd
+        ls -la
 
     - name: Install dependencies
       run: flutter pub get
