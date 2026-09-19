@@ -23,17 +23,23 @@ jobs:
         git clone https://github.com/flutter/flutter.git -b 3.19.0 --depth 1 _flutter
         echo "$GITHUB_WORKSPACE/_flutter/bin" >> $GITHUB_PATH
 
-    - name: Create fresh Flutter project structure & inject files
+    - name: Inject custom code and Build APK
       run: |
-        # एक नया सही स्ट्रक्चर वाला फ्लटर प्रोजेक्ट अस्थायी रूप से बनाते हैं
+        # नया डिफ़ॉल्ट प्रोजेक्ट बनाते हैं
         flutter create temp_project --org com.example.sellkaro
         
-        # अपनी मौजूदा dart फाइलों और pubspec.yaml को नए प्रोजेक्ट के lib फोल्डर में कॉपी करते हैं
-        mkdir -p temp_project/lib
+        # आपकी सारी डार्ट फाइलों को नए प्रोजेक्ट के lib फोल्डर में कॉपी करते हैं
         cp *.dart temp_project/lib/ 2>/dev/null || true
         cp pubspec.yaml temp_project/ 2>/dev/null || true
         
-        # प्रोजेक्ट वाले फोल्डर में मूव होते हैं
+        # अगर आपकी मेन फाइल का नाम Main.dart है, तो उसे Flutter की डिफ़ॉल्ट main.dart बना देते हैं
+        if [ -f "temp_project/lib/Main.dart" ]; then
+          cp temp_project/lib/Main.dart temp_project/lib/main.dart
+        elif [ -f "temp_project/lib/Home.dart" ]; then
+          cp temp_project/lib/Home.dart temp_project/lib/main.dart
+        fi
+
+        # फोल्डर में जाकर APK बिल्ड करते हैं
         cd temp_project
         flutter pub get
         flutter build apk --release
