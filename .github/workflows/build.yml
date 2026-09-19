@@ -9,10 +9,8 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - name: Clone repository manually
-      run: |
-        git clone https://github.com/${{ github.repository }}.git .
-        git checkout main
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
     - name: Set up Java
       run: |
@@ -25,19 +23,23 @@ jobs:
         git clone https://github.com/flutter/flutter.git -b 3.19.0 --depth 1 _flutter
         echo "$GITHUB_WORKSPACE/_flutter/bin" >> $GITHUB_PATH
 
-    - name: Doctor and config
+    - name: Create fresh Flutter project structure & inject files
       run: |
-        flutter doctor
-        flutter config --no-analytics
-
-    - name: Install dependencies
-      run: flutter pub get
-
-    - name: Build APK
-      run: flutter build apk --release
+        # एक नया सही स्ट्रक्चर वाला फ्लटर प्रोजेक्ट अस्थायी रूप से बनाते हैं
+        flutter create temp_project --org com.example.sellkaro
+        
+        # अपनी मौजूदा dart फाइलों और pubspec.yaml को नए प्रोजेक्ट के lib फोल्डर में कॉपी करते हैं
+        mkdir -p temp_project/lib
+        cp *.dart temp_project/lib/ 2>/dev/null || true
+        cp pubspec.yaml temp_project/ 2>/dev/null || true
+        
+        # प्रोजेक्ट वाले फोल्डर में मूव होते हैं
+        cd temp_project
+        flutter pub get
+        flutter build apk --release
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: release-apk
-        path: build/app/outputs/flutter-apk/app-release.apk
+        path: temp_project/build/app/outputs/flutter-apk/app-release.apk
