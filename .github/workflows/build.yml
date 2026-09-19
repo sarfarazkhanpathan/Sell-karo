@@ -29,24 +29,17 @@ jobs:
       run: |
         flutter create temp_project --org com.example.sellkaro
         
-        # Copy all custom dart files
+        # Copy all root dart files into the temporary project lib folder
         cp *.dart temp_project/lib/ 2>/dev/null || true
         
-        # Check and inject pubspec.yaml or add Firebase dependencies if missing
-        if [ -f "pubspec.yaml" ]; then
-          cp pubspec.yaml temp_project/
-        fi
-
         cd temp_project
         
-        # Automatically ensure firebase dependencies exist in pubspec.yaml
-        flutter pub add firebase_core firebase_auth || true
-
-        # Handle main entry point file mapping correctly
+        # Explicitly add required Firebase dependencies so they are resolved
+        flutter pub add firebase_core firebase_auth
+        
+        # Handle Main/main entry file mapping safely
         if [ -f "lib/Main.dart" ]; then
           cp lib/Main.dart lib/main.dart
-        elif [ -f "lib/main.dart" ]; then
-          echo "main.dart already exists"
         elif [ -f "lib/Home.dart" ]; then
           cp lib/Home.dart lib/main.dart
         fi
