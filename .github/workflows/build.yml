@@ -29,27 +29,21 @@ jobs:
       run: |
         flutter create temp_project --org com.example.sellkaro
         
+        # Clear default lib files and copy all custom files safely
+        rm -rf temp_project/lib/*
         cp *.dart temp_project/lib/ 2>/dev/null || true
         
         cd temp_project
         
-        flutter pub add firebase_core firebase_auth
+        # Add all required Firebase and utility dependencies used in your app
+        flutter pub add firebase_core firebase_auth cloud_firestore image_picker
         
-        if [ -f "lib/Main.dart" ]; then
-          cp lib/Main.dart lib/main.dart
-        elif [ -f "lib/Home.dart" ]; then
-          cp lib/Home.dart lib/main.dart
+        # Ensure main entry point exists, fallback if Main.dart is present
+        if [ -f "lib/Main.dart" ] && [ ! -f "lib/main.dart" ]; then
+          mv lib/Main.dart lib/main.dart
+        elif [ -f "lib/Home.dart" ] && [ ! -f "lib/main.dart" ]; then
+          mv lib/Home.dart lib/main.dart
         fi
-
-        cd lib
-        if [ -f "main.dart" ]; then
-          for f in *.dart; do
-            if [ "$f" != "main.dart" ] && [ "$f" != "Main.dart" ]; then
-              sed -i "1i import '$f';" main.dart
-            fi
-          done
-        fi
-        cd ..
 
         flutter pub get
         flutter build apk --release
