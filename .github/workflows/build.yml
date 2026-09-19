@@ -34,15 +34,26 @@ jobs:
         
         cd temp_project
         
-        # Explicitly add required Firebase dependencies so they are resolved
+        # Explicitly add required Firebase dependencies
         flutter pub add firebase_core firebase_auth
         
-        # Handle Main/main entry file mapping safely
+        # Handle Main file mapping and auto-import all other dart files if needed
         if [ -f "lib/Main.dart" ]; then
           cp lib/Main.dart lib/main.dart
         elif [ -f "lib/Home.dart" ]; then
           cp lib/Home.dart lib/main.dart
         fi
+
+        # Automatically inject imports for all other .dart files into main.dart to resolve missing class references
+        cd lib
+        if [ -f "main.dart" ]; then
+          for f *.dart; do
+            if [ "$f" != "main.dart" ] && [ "$f" != "Main.dart" ]; then
+              sed -i "1i import '$f';" main.dart
+            fi
+          done
+        fi
+        cd ..
 
         flutter pub get
         flutter build apk --release
